@@ -1,5 +1,5 @@
 import json
-from nbt import nbt
+from . import nbt
 
 class Block:
     """

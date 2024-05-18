@@ -1,13 +1,13 @@
 from typing import Union, List, BinaryIO
+from io import BytesIO
+import zlib
+import math
 from .empty_chunk import EmptyChunk
 from .chunk import Chunk
 from .empty_section import EmptySection
 from .block import Block
 from .errors import OutOfBoundsCoordinates
-from io import BytesIO
-from nbt import nbt
-import zlib
-import math
+from . import nbt
 
 def from_inclusive(a, b):
     """Returns a range from a to b, including both endpoints"""

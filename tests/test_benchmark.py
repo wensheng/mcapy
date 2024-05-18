@@ -4,6 +4,7 @@ import math
 import time
 import logging
 import array
+import pytest
 
 LOGGER = logging.getLogger(__name__)
 

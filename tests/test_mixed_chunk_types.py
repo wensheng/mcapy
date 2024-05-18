@@ -1,7 +1,9 @@
 import context as _
+from pytest import mark
 from anvil import Chunk, EmptyChunk, EmptyRegion, Block, Region
 import random
 
+#@mark.skip(reason="temp")
 def test_mixed_chunk_types():
     colors = ['red', 'orange', 'yellow', 'green']
 

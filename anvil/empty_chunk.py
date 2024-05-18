@@ -2,7 +2,9 @@ from typing import List
 from .block import Block
 from .empty_section import EmptySection
 from .errors import OutOfBoundsCoordinates, EmptySectionAlreadyExists
-from nbt import nbt
+from . import nbt
+
+WORLD_VERSION = 2844 # 21w43a Minecraft 1.18 snapshot 7
 
 class EmptyChunk:
     """
@@ -24,7 +26,7 @@ class EmptyChunk:
         self.x = x
         self.z = z
         self.sections: List[EmptySection] = [None]*16
-        self.version = 1976
+        self.version = WORLD_VERSION
 
     def add_section(self, section: EmptySection, replace: bool = True):
         """
@@ -119,13 +121,12 @@ class EmptyChunk:
         """
         root = nbt.NBTFile()
         root.tags.append(nbt.TAG_Int(name='DataVersion',value=self.version))
-        level = nbt.TAG_Compound()
+        #level = nbt.TAG_Compound()
         # Needs to be in a separate line because it just gets
         # ignored if you pass it as a kwarg in the constructor
-        level.name = 'Level'
-        level.tags.extend([
+        root.tags.extend([
             nbt.TAG_List(name='Entities', type=nbt.TAG_Compound),
-            nbt.TAG_List(name='TileEntities', type=nbt.TAG_Compound),
+            nbt.TAG_List(name='block_entities', type=nbt.TAG_Compound),
             nbt.TAG_List(name='LiquidTicks', type=nbt.TAG_Compound),
             nbt.TAG_Int(name='xPos', value=self.x),
             nbt.TAG_Int(name='zPos', value=self.z),
@@ -134,7 +135,7 @@ class EmptyChunk:
             nbt.TAG_Byte(name='isLightOn', value=1),
             nbt.TAG_String(name='Status', value='full')
         ])
-        sections = nbt.TAG_List(name='Sections', type=nbt.TAG_Compound)
+        sections = nbt.TAG_List(name='sections', type=nbt.TAG_Compound)
         for s in self.sections:
             if s:
                 p = s.palette()
@@ -143,6 +144,5 @@ class EmptyChunk:
                 if len(p) == 1 and p[0].name() == 'minecraft:air':
                     continue
                 sections.tags.append(s.save())
-        level.tags.append(sections)
-        root.tags.append(level)
+        root.tags.append(sections)
         return root

@@ -1,8 +1,8 @@
 import sys
 from typing import Union, Tuple, Generator, Optional
-from nbt import nbt
+from . import nbt
 from .block import Block
-from .region import Region
+# from .region import Region
 from .errors import OutOfBoundsCoordinates, ChunkNotFound
 
 
@@ -194,14 +194,16 @@ class Chunk:
         if section is None or isinstance(section, int):
             section = self.get_section(section or 0)
 
-        if section is None or 'BlockStates' not in section:
+        if section is None or 'block_states' not in section:
             air = Block.from_name('minecraft:air')
             for i in range(4096):
                 yield air
             return
 
-        states = section['BlockStates'].value
-        palette = section['Palette']
+        # TODO: what should it be?
+        # states = section['block_states']['data']
+        states = section['block_states'].value
+        palette = section['block_states']['palette']
 
         bits = max((len(palette) - 1).bit_length(), 4)
 
@@ -260,24 +262,22 @@ class Chunk:
             if x == t_x and y == t_y and z == t_z:
                 return tile_entity
 
-    @classmethod
-    def from_region(cls, region: Union[str, Region], chunk_x: int, chunk_z: int):
-        """
-        Creates a new chunk from region and the chunk's X and Z
-
-        Parameters
-        ----------
-        region
-            Either a :class:`anvil.Region` or a region file name (like ``r.0.0.mca``)
-
-        Raises
-        ----------
-        anvil.ChunkNotFound
-            If a chunk is outside this region or hasn't been generated yet
-        """
-        if isinstance(region, str):
-            region = Region.from_file(region)
-        nbt_data = region.chunk_data(chunk_x, chunk_z)
-        if nbt_data is None:
-            raise ChunkNotFound(f'Could not find chunk ({chunk_x}, {chunk_z})')
-        return cls(nbt_data)
+    # @classmethod
+    # def from_region(cls, region: Union[str, Region], chunk_x: int, chunk_z: int):
+    #     """
+    #     Creates a new chunk from region and the chunk's X and Z
+    #    Parameters
+    #    ----------
+    #    region
+    #        Either a :class:`anvil.Region` or a region file name (like ``r.0.0.mca``)
+    #    Raises
+    #    ----------
+    #    anvil.ChunkNotFound
+    #        If a chunk is outside this region or hasn't been generated yet
+    #    """
+    #    if isinstance(region, str):
+    #        region = Region.from_file(region)
+    #    nbt_data = region.chunk_data(chunk_x, chunk_z)
+    #    if nbt_data is None:
+    #        raise ChunkNotFound(f'Could not find chunk ({chunk_x}, {chunk_z})')
+    #    return cls(nbt_data)

@@ -1,8 +1,8 @@
 from typing import Tuple, Union, BinaryIO
-from nbt import nbt
 import zlib
 from io import BytesIO
-import anvil
+from . import nbt
+from .chunk import Chunk
 from .errors import GZipChunkData
 
 class Region:
@@ -80,7 +80,7 @@ class Region:
         compressed_data = self.data[off + 5 : off + 5 + length - 1]
         return nbt.NBTFile(buffer=BytesIO(zlib.decompress(compressed_data)))
 
-    def get_chunk(self, chunk_x: int, chunk_z: int) -> 'anvil.Chunk':
+    def get_chunk(self, chunk_x: int, chunk_z: int) -> Chunk:
         """
         Returns the chunk at given coordinates,
         same as doing ``Chunk.from_region(region, chunk_x, chunk_z)``
@@ -95,7 +95,10 @@ class Region:
         
         :rtype: :class:`anvil.Chunk`
         """
-        return anvil.Chunk.from_region(self, chunk_x, chunk_z)
+        nbt_data = self.chunk_data(chunk_x, chunk_z)
+        if nbt_data is None:
+            raise ChunkNotFound(f'Could not find chunk ({chunk_x}, {chunk_z})')
+        return Chunk(nbt_data)
 
     @classmethod
     def from_file(cls, file: Union[str, BinaryIO]):
