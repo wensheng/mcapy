@@ -58,10 +58,10 @@ class Chunk:
             # See https://minecraft.fandom.com/wiki/Data_version
             self.version = None
 
-        self.data = nbt_data['Level']
+        self.data = nbt_data
         self.x = self.data['xPos'].value
         self.z = self.data['zPos'].value
-        self.tile_entities = self.data['TileEntities']
+        self.tile_entities = self.data['block_entities']
 
     def get_section(self, y: int) -> nbt.TAG_Compound:
         """
@@ -78,11 +78,11 @@ class Chunk:
         anvil.OutOfBoundsCoordinates
             If Y is not in range of 0 to 15
         """
-        if y < 0 or y > 15:
+        if y < -4 or y > 19:
             raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of 0 to 15')
 
         try:
-            sections = self.data["Sections"]
+            sections = self.data["sections"]
         except KeyError:
             return None
 
@@ -134,8 +134,8 @@ class Chunk:
             raise OutOfBoundsCoordinates(f'X ({x!r}) must be in range of 0 to 15')
         if z < 0 or z > 15:
             raise OutOfBoundsCoordinates(f'Z ({z!r}) must be in range of 0 to 15')
-        if y < 0 or y > 255:
-            raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of 0 to 255')
+        if y < -64 or y > 319:
+            raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of -64 to 319')
 
         if section is None:
             section = self.get_section(y // 16)

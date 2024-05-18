@@ -1,5 +1,5 @@
+import json
 from nbt import nbt
-from frozendict import frozendict
 from .legacy import LEGACY_ID_MAP
 
 class Block:
@@ -51,7 +51,7 @@ class Block:
         return self.namespace == other.namespace and self.id == other.id and self.properties == other.properties
 
     def __hash__(self):
-        return hash(self.name()) ^ hash(frozendict(self.properties))
+        return hash(self.name()) ^ hash(json.dumps(self.properties, sort_keys=True))
 
     @classmethod
     def from_name(cls, name: str, *args, **kwargs):
