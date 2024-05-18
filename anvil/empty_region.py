@@ -180,7 +180,7 @@ class EmptyRegion:
             if not self.inside(x1, y1, z1):
                 raise OutOfBoundsCoordinates(f'First coords ({x1}, {y1}, {z1}) is not inside this region')
             if not self.inside(x2, y2, z2):
-                raise OutOfBoundsCoordinates(f'Second coords ({x}, {y}, {z}) is not inside this region')
+                raise OutOfBoundsCoordinates(f'Second coords ({x2}, {y2}, {z2}) is not inside this region')
 
         for y in from_inclusive(y1, y2):
             for z in from_inclusive(z1, z2):
