@@ -7,7 +7,6 @@ from .chunk import Chunk
 from .empty_section import EmptySection
 from .block import Block
 from .errors import OutOfBoundsCoordinates
-from . import nbt
 
 def from_inclusive(a, b):
     """Returns a range from a to b, including both endpoints"""

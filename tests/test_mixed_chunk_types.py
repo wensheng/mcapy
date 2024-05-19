@@ -1,6 +1,5 @@
-import context as _
 from pytest import mark
-from anvil import Chunk, EmptyChunk, EmptyRegion, Block, Region
+from mca import Chunk, EmptyChunk, EmptyRegion, Block, Region
 import random
 
 def test_mixed_chunk_types():

@@ -1,6 +1,5 @@
-from typing import List, Tuple, Sequence, Iterable
+from typing import Sequence, Iterable
 from . import EmptySection, Block
-from .errors import OutOfBoundsCoordinates
 import array
 from . import nbt
 

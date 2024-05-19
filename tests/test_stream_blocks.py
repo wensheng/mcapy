@@ -1,6 +1,5 @@
-import context as _
 from pytest import mark
-from anvil import EmptyRegion, Region, Block
+from mca import EmptyRegion, Region, Block
 
 def coord_to_index(x, y, z):
     return y * 16 * 16 + z * 16 + x

@@ -2,8 +2,7 @@ import sys
 from typing import Union, Tuple, Generator, Optional
 from . import nbt
 from .block import Block
-# from .region import Region
-from .errors import OutOfBoundsCoordinates, ChunkNotFound
+from .errors import OutOfBoundsCoordinates
 
 
 def bin_append(a, b, length=None):

@@ -3,7 +3,7 @@ import zlib
 from io import BytesIO
 from . import nbt
 from .chunk import Chunk
-from .errors import GZipChunkData
+from .errors import GZipChunkData, ChunkNotFound
 
 class Region:
     """
