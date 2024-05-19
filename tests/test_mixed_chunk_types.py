@@ -3,9 +3,8 @@ from pytest import mark
 from anvil import Chunk, EmptyChunk, EmptyRegion, Block, Region
 import random
 
-#@mark.skip(reason="temp")
 def test_mixed_chunk_types():
-    colors = ['red', 'orange', 'yellow', 'green']
+    colors = ['stone', 'dirt', 'grass', 'water']
 
     region = EmptyRegion(0, 0)
 
@@ -15,10 +14,9 @@ def test_mixed_chunk_types():
         chunk.set_block(Block(color), i, 0, 0)
         empty_chunk.set_block(Block(color), i, 0, 0)
 
-    chunk = Chunk(chunk.save())
-
-    region.add_chunk(chunk)
+    region.add_chunk(Chunk(chunk.save()))
     region.add_chunk(empty_chunk)
+    #region.add_chunk(Chunk(empty_chunk.save()))
 
     region = Region(region.save())
 

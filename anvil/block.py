@@ -64,7 +64,11 @@ class Block:
         , args, kwargs
             Will be passed on to the main constructor
         """
-        namespace, block_id = name.split(':')
+        if ':' in name:
+            namespace, block_id = name.split(':')
+        else:
+            namespace = 'minecraft'
+            block_id = name
         return cls(namespace, block_id, *args, **kwargs)
 
     @classmethod

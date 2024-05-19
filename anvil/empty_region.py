@@ -190,7 +190,7 @@ class EmptyRegion:
                     else:
                         self.set_block(block, x, y, z)
 
-    def save(self, file: Union[str, BinaryIO]=None) -> bytes:
+    def save(self, file: Union[str, BinaryIO, None]=None) -> bytes:
         """
         Returns the region as bytes with
         the anvil file format structure,
@@ -210,9 +210,10 @@ class EmptyRegion:
                 continue
             chunk_data = BytesIO()
             if isinstance(chunk, Chunk):
-                nbt_data = nbt.NBTFile()
-                nbt_data.tags.append(nbt.TAG_Int(name='DataVersion', value=chunk.version))
-                nbt_data.tags.append(chunk.data)
+                # nbt_data = nbt.NBTFile()
+                # nbt_data.tags.append(nbt.TAG_Int(name='DataVersion', value=chunk.version))
+                # nbt_data.tags.append(chunk.data)
+                nbt_data = chunk.data
             else:
                 nbt_data = chunk.save()
             nbt_data.write_file(buffer=chunk_data)

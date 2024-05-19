@@ -1,18 +1,22 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from . import Block
 from .errors import OutOfBoundsCoordinates
-from nbt import nbt
+from . import nbt
 from struct import Struct
 import array
+
 
 # dirty mixin to change q to Q
 def _update_fmt(self, length):
     self.fmt = Struct(f'>{length}Q')
+
 nbt.TAG_Long_Array.update_fmt = _update_fmt
+
 
 def bin_append(a, b, length=None):
     length = length or b.bit_length()
     return (a << length) | b
+
 
 class EmptySection:
     """
@@ -31,13 +35,13 @@ class EmptySection:
     air: :class:`Block`
         An air block
     """
-    __slots__ = ('y', 'blocks', 'air')
+    air = Block('minecraft', 'air')
+
+    __slots__ = ('y', 'blocks')
     def __init__(self, y: int):
         self.y = y
         # None is the same as an air block
-        self.blocks: List[Block] = [None] * 4096
-        # Block that will be used when None
-        self.air = Block('minecraft', 'air')
+        self.blocks: List[Union[Block, None]] = [None] * 4096
 
     @staticmethod
     def inside(x: int, y: int, z: int) -> bool:
@@ -146,7 +150,8 @@ class EmptySection:
         root.tags.append(nbt.TAG_Byte(name='Y', value=self.y))
 
         palette = self.palette()
-        nbt_pal = nbt.TAG_List(name='Palette', type=nbt.TAG_Compound)
+        block_states = nbt.TAG_Compound(name='block_states')
+        nbt_pal = nbt.TAG_List(name='palette', type=nbt.TAG_Compound)
         for block in palette:
             tag = nbt.TAG_Compound()
             tag.tags.append(nbt.TAG_String(name='Name', value=block.name()))
@@ -167,11 +172,14 @@ class EmptySection:
                         properties.tags.append(value)
                 tag.tags.append(properties)
             nbt_pal.tags.append(tag)
-        root.tags.append(nbt_pal)
+        # root.tags.append(nbt_pal)
 
         states = self.blockstates(palette=palette)
-        bstates = nbt.TAG_Long_Array(name='BlockStates')
-        bstates.value = states
-        root.tags.append(bstates)
+        # bstates = nbt.TAG_Long_Array(name='BlockStates')
+        bstates = nbt.TAG_Long_Array(name='data')
+        bstates.value = states.tolist()
+        block_states.tags.append(nbt_pal)
+        block_states.tags.append(bstates)
+        root.tags.append(block_states)
 
         return root

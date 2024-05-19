@@ -5,7 +5,6 @@ from anvil import EmptyRegion, Region, Block
 def coord_to_index(x, y, z):
     return y * 16 * 16 + z * 16 + x
 
-@mark.skip(reason="temp")
 def test_4bits():
     region = EmptyRegion(0, 0)
 
@@ -34,14 +33,19 @@ def test_4bits():
         else:
             assert block.id == 'air'
 
+@mark.skip(reason="temp")
 def test_5bits():
     from random import randint
     region = EmptyRegion(0, 0)
 
-    blocks = 'stone,dirt,oak_planks,sand,bedrock,white_wool,red_wool,green_wool,sponge,awesome,these,dont,need,to,exist,foo,bar'.split(',')
-    positions = [(randint(0, 15), randint(0, 15), randint(0, 15)) for _ in range(len(blocks))]
-    for block, pos in zip(blocks, positions):
-        region.set_block(Block('minecraft', block), *pos)
+    blocks = """stone dirt oak_planks sand bedrock white_wool red_wool
+                green_wool sponge awesome these dont need to exist
+                foo bar""".split()
+    positions = list(set(
+        [(randint(0, 15), randint(0, 15), randint(0, 15)) for _ in range(len(blocks))]
+    ))
+    for i, pos in enumerate(positions):
+        region.set_block(Block(blocks[i]), *pos)
 
     region = Region(region.save())
 
@@ -51,7 +55,7 @@ def test_5bits():
         else:
             assert block.id == 'air'
 
-@mark.skip(reason="temp")
+# @mark.skip(reason="temp")
 def test_index():
     region = EmptyRegion(0, 0)
 
@@ -70,12 +74,14 @@ def test_index():
         else:
             assert block.id == 'air'
 
+@mark.skip(reason="temp")
 def test_index_5bits():
     region = EmptyRegion(0, 0)
 
     region.set_block(Block('minecraft', 'dirt'), 2, 0, 0)
     region.set_block(Block('minecraft', 'stone'), 3, 0, 0)
-    blocks = 'stone,dirt,oak_planks,sand,bedrock,white_wool,red_wool,green_wool,sponge,awesome,these,dont,need,to,exist,foo,bar'.split(',')
+    blocks = """stone dirt oak_planks sand bedrock white_wool red_wool green_wool
+                sponge awesome these dont need to exist foo bar""".split()
     for i, block in enumerate(blocks):
         region.set_block(Block('minecraft', block), i % 16, 0, i // 16)
 

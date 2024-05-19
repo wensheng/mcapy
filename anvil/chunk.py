@@ -200,9 +200,7 @@ class Chunk:
                 yield air
             return
 
-        # TODO: what should it be?
-        # states = section['block_states']['data']
-        states = section['block_states'].value
+        states = section['block_states']['data']
         palette = section['block_states']['palette']
 
         bits = max((len(palette) - 1).bit_length(), 4)

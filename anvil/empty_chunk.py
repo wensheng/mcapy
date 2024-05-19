@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Union
 from .block import Block
 from .empty_section import EmptySection
 from .errors import OutOfBoundsCoordinates, EmptySectionAlreadyExists
 from . import nbt
 
 WORLD_VERSION = 2844 # 21w43a Minecraft 1.18 snapshot 7
+NUM_SECTIONS_PER_CHUNK = 24
 
 class EmptyChunk:
     """
@@ -21,12 +22,12 @@ class EmptyChunk:
     version: :class:`int`
         Chunk's DataVersion
     """
-    __slots__ = ('x', 'z', 'sections', 'version')
+
+    __slots__ = ('x', 'z', 'sections')
     def __init__(self, x: int, z: int):
         self.x = x
         self.z = z
-        self.sections: List[EmptySection] = [None]*16
-        self.version = WORLD_VERSION
+        self.sections: List[Union[EmptySection,None]] = [None] * NUM_SECTIONS_PER_CHUNK
 
     def add_section(self, section: EmptySection, replace: bool = True):
         """
@@ -44,9 +45,11 @@ class EmptyChunk:
         anvil.EmptySectionAlreadyExists
             If ``replace`` is ``False`` and section with same Y already exists in this chunk
         """
-        if self.sections[section.y] and not replace:
+        if section.y < -4 or section.y + 4 > NUM_SECTIONS_PER_CHUNK:
+            raise OutOfBoundsCoordinates('section Y is too high.')
+        if self.sections[section.y + 4] and not replace:
             raise EmptySectionAlreadyExists(f'EmptySection (Y={section.y}) already exists in this chunk')
-        self.sections[section.y] = section
+        self.sections[section.y + 4] = section
 
     def get_block(self, x: int, y: int, z: int) -> Block:
         """
@@ -57,7 +60,7 @@ class EmptyChunk:
         int x, z
             In range of 0 to 15
         y
-            In range of 0 to 255
+            In range of -64 to 319
 
         Raises
         ------
@@ -74,11 +77,12 @@ class EmptyChunk:
             raise OutOfBoundsCoordinates(f'X ({x!r}) must be in range of 0 to 15')
         if z < 0 or z > 15:
             raise OutOfBoundsCoordinates(f'Z ({z!r}) must be in range of 0 to 15')
-        if y < 0 or y > 255:
+        if y < -64 or y > 319:
             raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of 0 to 255')
-        section = self.sections[y // 16]
+        section = self.sections[ (y + 64) // 16]
         if section is None:
-            return
+            # TODO: return None?
+            return Block('air')
         return section.get_block(x, y % 16, z)
 
     def set_block(self, block: Block, x: int, y: int, z: int):
@@ -90,7 +94,7 @@ class EmptyChunk:
         int x, z
             In range of 0 to 15
         y
-            In range of 0 to 255
+            In range of -64 to 319
 
         Raises
         ------
@@ -102,11 +106,11 @@ class EmptyChunk:
             raise OutOfBoundsCoordinates(f'X ({x!r}) must be in range of 0 to 15')
         if z < 0 or z > 15:
             raise OutOfBoundsCoordinates(f'Z ({z!r}) must be in range of 0 to 15')
-        if y < 0 or y > 255:
+        if y < -64 or y > 319:
             raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of 0 to 255')
-        section = self.sections[y // 16]
+        section = self.sections[ (y + 64) // 16]
         if section is None:
-            section = EmptySection(y // 16)
+            section = EmptySection( y // 16)
             self.add_section(section)
         section.set_block(block, x, y % 16, z)
 
@@ -120,7 +124,7 @@ class EmptyChunk:
         but minecraft stills accept it.
         """
         root = nbt.NBTFile()
-        root.tags.append(nbt.TAG_Int(name='DataVersion',value=self.version))
+        root.tags.append(nbt.TAG_Int(name='DataVersion',value=WORLD_VERSION))
         #level = nbt.TAG_Compound()
         # Needs to be in a separate line because it just gets
         # ignored if you pass it as a kwarg in the constructor
