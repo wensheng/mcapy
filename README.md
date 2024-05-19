@@ -1,49 +1,48 @@
-# anvil-parser
+# mcapy
 
-[![CodeFactor](https://www.codefactor.io/repository/github/matcool/anvil-parser/badge/master)](https://www.codefactor.io/repository/github/matcool/anvil-parser/overview/master)
-[![Documentation Status](https://readthedocs.org/projects/anvil-parser/badge/?version=latest)](https://anvil-parser.readthedocs.io/en/latest/?badge=latest)
-[![Tests](https://github.com/matcool/anvil-parser/actions/workflows/run-pytest.yml/badge.svg)](https://github.com/matcool/anvil-parser/actions/workflows/run-pytest.yml)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/anvil-parser)](https://pypi.org/project/anvil-parser/)
+[![Documentation Status](https://readthedocs.org/projects/mcapy/badge/?version=latest)](https://mcapy.readthedocs.io/en/latest/?badge=latest)
+[![Tests](https://github.com/wensheng/mcapy/actions/workflows/run-pytest.yml/badge.svg)](https://github.com/wensheng/mcapy/actions/workflows/run-pytest.yml)
+<!---
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/mcapy)](https://pypi.org/project/mcapy/)
+-->
 
-Simple parser for the [Minecraft anvil file format](https://minecraft.gamepedia.com/Anvil_file_format)
+Python reader and writer for Minecraft region MCA (aka [Anvil File Format](https://minecraft.wiki/w/Anvil_file_format)) files.
+
+It only works for the files from Minecraft v1.18 onward.
+
 # Installation
-This project is available on [PyPI](https://pypi.org/project/anvil-parser/) and can be installed with pip
+This project is available on [PyPI](https://pypi.org/project/mcapy/) and can be installed with pip
 ```
-pip install anvil-parser
+pip install mcapy
 ```
 or directly from github
 ```
-pip install git+https://github.com/matcool/anvil-parser.git
+pip install git+https://github.com/wensheng/mcapy.git
 ```
 # Usage
 ## Reading
 ```python
-import anvil
+from mca import Region
 
-region = anvil.Region.from_file('r.0.0.mca')
-
-# You can also provide the region file name instead of the object
-chunk = anvil.Chunk.from_region(region, 0, 0)
-
-# If `section` is not provided, will get it from the y coords
-# and assume it's global
+region = Region.from_file('r.0.0.mca')
+chunk = region.get_chunk(0, 0)
 block = chunk.get_block(0, 0, 0)
 
-print(block) # <Block(minecraft:air)>
-print(block.id) # air
-print(block.properties) # {}
+print(block)
+print(block.id)
+print(block.properties)
 ```
 ## Making own regions
 ```python
-import anvil
+from mca import Block, EmptyRegion
 from random import choice
 
 # Create a new region with the `EmptyRegion` class at 0, 0 (in region coords)
-region = anvil.EmptyRegion(0, 0)
+region = EmptyRegion(0, 0)
 
 # Create `Block` objects that are used to set blocks
-stone = anvil.Block('minecraft', 'stone')
-dirt = anvil.Block('minecraft', 'dirt')
+stone = Block('minecraft', 'stone')
+dirt = Block('dirt')  # you can omit 'minecraft' namespace
 
 # Make a 16x16x16 cube of either stone or dirt blocks
 for y in range(16):
@@ -52,14 +51,10 @@ for y in range(16):
             region.set_block(choice((stone, dirt)), x, y, z)
 
 # Save to a file
-region.save('r.0.0.mca')
+region.save('r.-1.-1.mca')
 ```
-# Todo
-*things to do before 1.0.0*
-- [x] Proper documentation
-- [ ] Biomes
-- [x] CI
-- [ ] More tests
-  - [ ] Tests for 20w17a+ BlockStates format
-# Note
-Testing done in 1.14.4 and 1.15.2, should work fine for other versions.
+
+## Note
+
+This project is originally forked from [anvil-parser](https://github.com/matcool/anvil-parser), which was archived by its author.
+
