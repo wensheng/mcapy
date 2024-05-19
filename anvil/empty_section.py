@@ -128,13 +128,17 @@ class EmptySection:
                 index = palette.index(self.air)
             else:
                 index = palette.index(block)
+            # since 1.16, index will not span across arrays
             # If it's more than 64 bits then add to list and start over
             # with the remaining bits from last one
             if current_len + bits > 64:
-                leftover = 64 - current_len
-                states.append(bin_append(index & ((1 << leftover) - 1), current, length=current_len))
-                current = index >> leftover
-                current_len = bits - leftover
+                # leftover = 64 - current_len
+                # states.append(bin_append(index & ((1 << leftover) - 1), current, length=current_len))
+                # current = index >> leftover
+                # current_len = bits - leftover
+                states.append(current)
+                current = index
+                current_len = bits
             else:
                 current = bin_append(index, current, length=current_len)
                 current_len += bits

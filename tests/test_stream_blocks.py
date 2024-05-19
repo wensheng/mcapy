@@ -33,7 +33,7 @@ def test_4bits():
         else:
             assert block.id == 'air'
 
-@mark.skip(reason="temp")
+# @mark.skip(reason="temp")
 def test_5bits():
     from random import randint
     region = EmptyRegion(0, 0)
@@ -74,7 +74,7 @@ def test_index():
         else:
             assert block.id == 'air'
 
-@mark.skip(reason="temp")
+# @mark.skip(reason="temp")
 def test_index_5bits():
     region = EmptyRegion(0, 0)
 

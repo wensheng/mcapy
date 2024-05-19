@@ -6,4 +6,5 @@ build/
 .pytest_cache/
 .vscode/
 docs/_build/
-examples/test_112.py
+venv/
+debug/
