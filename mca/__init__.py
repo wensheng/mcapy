@@ -1,4 +1,5 @@
 from .chunk import Chunk
+from .biome import Biome
 from .block import Block
 from .region import Region
 from .empty_region import EmptyRegion

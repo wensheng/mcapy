@@ -1,3 +1,6 @@
+"""
+TODO: will remove RawSection
+"""
 from typing import Sequence, Iterable
 from . import EmptySection, Block
 import array

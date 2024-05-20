@@ -1,9 +1,9 @@
-from mca import EmptyRegion, Block, RawSection
 import math
 import time
 import logging
 import array
 import pytest
+from mca import EmptyRegion, Block, RawSection
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ def test_benchmark():
 
     LOGGER.info(f'Saving (average of {n}) took: {sum(times) / len(times):.3f}s')
 
+@pytest.mark.skip(reason='RawSection is deprecated')
 def test_raw_section():
     region = EmptyRegion(0, 0)
 
@@ -96,6 +97,8 @@ def test_raw_section():
 
     LOGGER.info(f'Saving (average of {n}) took: {sum(times) / len(times):.3f}s')
 
+
+@pytest.mark.skip(reason='RawSection is deprecated')
 def test_raw_section_simple():
     region = EmptyRegion(0, 0)
 

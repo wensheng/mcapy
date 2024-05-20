@@ -12,3 +12,6 @@ class EmptySectionAlreadyExists(Exception):
 
 class GZipChunkData(Exception):
     """Exception used when trying to get chunk data compressed in gzip"""
+
+class DataNotAvailable(Exception):
+    """Exception used when the data is not available"""

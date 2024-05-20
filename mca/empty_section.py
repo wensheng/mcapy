@@ -1,9 +1,14 @@
-from typing import List, Tuple, Union
-from . import Block
-from .errors import OutOfBoundsCoordinates
-from . import nbt
+"""
+Create new section
+"""
 from struct import Struct
 import array
+from typing import List, Tuple, Union
+
+from .block import Block
+from .biome import Biome
+from .errors import OutOfBoundsCoordinates
+from . import nbt
 
 
 # dirty mixin to change q to Q
@@ -37,11 +42,13 @@ class EmptySection:
     """
     air = Block('minecraft', 'air')
 
-    __slots__ = ('y', 'blocks')
+    __slots__ = ('y', 'blocks', 'biomes')
     def __init__(self, y: int):
         self.y = y
-        # None is the same as an air block
+        # 16 * 16 * 16 = 4096 blocks
         self.blocks: List[Union[Block, None]] = [None] * 4096
+        # 4 * 4 * 4 = 64 biomes
+        self.biomes: List[Union[Biome, None]] = [None] * 64
 
     @staticmethod
     def inside(x: int, y: int, z: int) -> bool:
@@ -145,6 +152,57 @@ class EmptySection:
         states.append(current)
         return states
 
+    def set_biome(self, biome: Biome, x: int, y: int, z: int):
+        """Sets biome"""
+        if x not in (0, 1, 2, 3):
+            raise OutOfBoundsCoordinates(f'X ({x!r}) must be in range of 0 to 3')
+        if z not in (0, 1, 2, 3):
+            raise OutOfBoundsCoordinates(f'Z ({z!r}) must be in range of 0 to 3')
+        if y not in (0, 1, 2, 3):
+            raise OutOfBoundsCoordinates(f'Y ({z!r}) must be in range of 0 to 3')
+
+        index = y * 16 + z * 4 + x
+        self.biomes[index] = biome
+
+    def biome_data(self, palette: Tuple[Biome]) -> array.array:
+        """
+        Returns a list of each biome's index in the palette.
+        
+        This is used in the 'biomes' tag of the section.
+
+        ----------
+        palette
+            Section's biome palette.
+        """
+        if len(palette) < 2:
+            return array.array('Q', [0] * 64)
+        if len(palette) > 63:
+            raise ValueError('Biome palette is too large')
+
+        bits = (len(palette) - 1).bit_length()
+        states = array.array('Q')
+        current = 0
+        current_len = 0
+        for biome in self.biomes:
+            if biome is None:
+                index = palette.index(palette[0])
+            else:
+                index = palette.index(biome)
+            if current_len + bits > 64:
+                # TODO: do biome index span across 64bit numbers?
+                # leftover = 64 - current_len
+                # states.append(bin_append(index & ((1 << leftover) - 1), current, length=current_len))
+                # current = index >> leftover
+                # current_len = bits - leftover
+                states.append(current)
+                current = index
+                current_len = bits
+            else:
+                current = bin_append(index, current, length=current_len)
+                current_len += bits
+        states.append(current)
+        return states
+
     def save(self) -> nbt.TAG_Compound:
         """
         Saves the section to a TAG_Compound and is used inside the chunk tag
@@ -186,4 +244,22 @@ class EmptySection:
         block_states.tags.append(bstates)
         root.tags.append(block_states)
 
+        # biomes
+        biomes = nbt.TAG_Compound(name='biomes')
+        biome_palette = nbt.TAG_List(name='palette', type=nbt.TAG_String)
+        biome_set = tuple(set(self.biomes))
+        if len(biome_set) == 1 and None in biome_set:
+            biome_set = (Biome('minecraft', 'the_void'),)
+        for biome in biome_set:
+            if biome:
+                biome_palette.tags.append(nbt.TAG_String(name='Name', value=biome.name()))
+        biomes.tags.append(biome_palette)
+        if len(biome_set) > 1:
+            biome_data = self.biome_data(palette=biome_set)
+            bdata = nbt.TAG_Long_Array(name='data')
+            bdata.value = biome_data.tolist()
+            biomes.tags.append(bdata)
+
+        root.tags.append(biomes)
+        
         return root

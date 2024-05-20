@@ -1,4 +1,8 @@
+"""
+Create empty chunk
+"""
 from typing import List, Union
+from .biome import Biome
 from .block import Block
 from .empty_section import EmptySection
 from .errors import OutOfBoundsCoordinates, EmptySectionAlreadyExists
@@ -23,10 +27,11 @@ class EmptyChunk:
         Chunk's DataVersion
     """
 
-    __slots__ = ('x', 'z', 'sections')
-    def __init__(self, x: int, z: int):
+    __slots__ = ('x', 'z', 'sections', 'version')
+    def __init__(self, x: int, z: int, version: int = WORLD_VERSION):
         self.x = x
         self.z = z
+        self.version = version
         self.sections: List[Union[EmptySection,None]] = [None] * NUM_SECTIONS_PER_CHUNK
 
     def add_section(self, section: EmptySection, replace: bool = True):
@@ -81,8 +86,7 @@ class EmptyChunk:
             raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of 0 to 255')
         section = self.sections[ (y + 64) // 16]
         if section is None:
-            # TODO: return None?
-            return Block('air')
+            return None
         return section.get_block(x, y % 16, z)
 
     def set_block(self, block: Block, x: int, y: int, z: int):
@@ -114,6 +118,36 @@ class EmptyChunk:
             self.add_section(section)
         section.set_block(block, x, y % 16, z)
 
+
+    def set_biome(self, biome: Biome, x: int, y: int, z: int):
+        """
+        Sets biome at given coordinates
+        
+        Parameters
+        ----------
+        int x, z
+            In range of 0 to 15
+        y
+            In range of -64 to 319
+
+        Raises
+        ------
+        anvil.OutOfBoundCoordidnates
+            If X, Y or Z are not in the proper range
+        
+        """
+        if x < 0 or x > 15:
+            raise OutOfBoundsCoordinates(f'X ({x!r}) must be in range of 0 to 15')
+        if z < 0 or z > 15:
+            raise OutOfBoundsCoordinates(f'Z ({z!r}) must be in range of 0 to 15')
+        if y < -64 or y > 319:
+            raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of 0 to 255')
+        section = self.sections[ (y + 64) // 16]
+        if section is None:
+            section = EmptySection( y // 16)
+            self.add_section(section)
+        section.set_biome(biome, x // 4, (y % 16) // 4, z // 4)
+
     def save(self) -> nbt.NBTFile:
         """
         Saves the chunk data to a :class:`NBTFile`
@@ -124,7 +158,7 @@ class EmptyChunk:
         but minecraft stills accept it.
         """
         root = nbt.NBTFile()
-        root.tags.append(nbt.TAG_Int(name='DataVersion',value=WORLD_VERSION))
+        root.tags.append(nbt.TAG_Int(name='DataVersion',value=self.version))
         #level = nbt.TAG_Compound()
         # Needs to be in a separate line because it just gets
         # ignored if you pass it as a kwarg in the constructor

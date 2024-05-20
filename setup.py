@@ -5,7 +5,7 @@ with open('README.md', 'r') as file:
 
 setuptools.setup(
     name='mcapy',
-    version='0.9.0',
+    version='0.9.1',
     author='wensheng',
     description='A Minecraft MCA file reader/writer',
     long_description=long_description,

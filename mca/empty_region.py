@@ -45,7 +45,7 @@ class EmptyRegion:
         factor = 32 if chunk else 512
         rx = x // factor
         rz = z // factor
-        return not (rx != self.x or rz != self.z or y < 0 or y > 255)
+        return not (rx != self.x or rz != self.z or y < -64 or y > 319)
 
     def get_chunk(self, x: int, z: int) -> EmptyChunk:
         """

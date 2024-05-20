@@ -1,8 +1,14 @@
+"""
+Chunk class
+ref: https://minecraft.wiki/w/Chunk_format
+"""
 import sys
 from typing import Union, Tuple, Generator, Optional
+
 from . import nbt
 from .block import Block
-from .errors import OutOfBoundsCoordinates
+from .biome import Biome
+from .errors import OutOfBoundsCoordinates, DataNotAvailable
 
 
 def bin_append(a, b, length=None):
@@ -13,12 +19,14 @@ def bin_append(a, b, length=None):
     length = length or b.bit_length()
     return (a << length) | b
 
+
 def nibble(byte_array, index):
     value = byte_array[index // 2]
     if index % 2:
         return value >> 4
     else:
         return value & 0b1111
+
 
 class Chunk:
     """
@@ -68,7 +76,7 @@ class Chunk:
             If Y is not in range of 0 to 15
         """
         if y < -4 or y > 19:
-            raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of 0 to 15')
+            raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of -4 to 19')
 
         try:
             sections = self.data["sections"]
@@ -185,8 +193,8 @@ class Chunk:
         ------
         :class:`anvil.Block`
         """
-        if isinstance(section, int) and (section < 0 or section > 16):
-            raise OutOfBoundsCoordinates(f'section ({section!r}) must be in range of 0 to 15')
+        if isinstance(section, int) and (section < -4 or section > 19):
+            raise OutOfBoundsCoordinates(f'section ({section!r}) must be in range of -4 to 19')
 
         # For better understanding of this code, read get_block()'s source
 
@@ -234,7 +242,7 @@ class Chunk:
             data >>= bits
             data_len -= bits
 
-    def stream_chunk(self, index: int=0, section: Union[int, nbt.TAG_Compound]=None) -> Generator[Block, None, None]:
+    def stream_chunk(self) -> Generator[Block, None, None]:
         """
         Returns a generator for all the blocks in the chunk
 
@@ -244,8 +252,8 @@ class Chunk:
         ------
         :class:`anvil.Block`
         """
-        for section in range(16):
-            for block in self.stream_blocks(section=section):
+        for i in range(-4,20):
+            for block in self.stream_blocks(section=i):
                 yield block
 
     def get_tile_entity(self, x: int, y: int, z: int) -> Optional[nbt.TAG_Compound]:
@@ -259,22 +267,45 @@ class Chunk:
             if x == t_x and y == t_y and z == t_z:
                 return tile_entity
 
-    # @classmethod
-    # def from_region(cls, region: Union[str, Region], chunk_x: int, chunk_z: int):
-    #     """
-    #     Creates a new chunk from region and the chunk's X and Z
-    #    Parameters
-    #    ----------
-    #    region
-    #        Either a :class:`anvil.Region` or a region file name (like ``r.0.0.mca``)
-    #    Raises
-    #    ----------
-    #    anvil.ChunkNotFound
-    #        If a chunk is outside this region or hasn't been generated yet
-    #    """
-    #    if isinstance(region, str):
-    #        region = Region.from_file(region)
-    #    nbt_data = region.chunk_data(chunk_x, chunk_z)
-    #    if nbt_data is None:
-    #        raise ChunkNotFound(f'Could not find chunk ({chunk_x}, {chunk_z})')
-    #    return cls(nbt_data)
+    def get_biome(self, x: int, y: int, z: int) -> Biome:
+        """
+        Returns the biome given x, y, z
+        """
+        if x < 0 or x > 15:
+            raise OutOfBoundsCoordinates(f'X ({x!r}) must be in range of 0 to 15')
+        if z < 0 or z > 15:
+            raise OutOfBoundsCoordinates(f'Z ({z!r}) must be in range of 0 to 15')
+        if y < -64 or y > 319:
+            raise OutOfBoundsCoordinates(f'Y ({y!r}) must be in range of -64 to 319')
+
+        section = self.get_section(y // 16)
+        if 'biomes' not in section:
+            raise DataNotAvailable('Biomes are not available')
+        
+        biomes = section['biomes']
+        biomes_palette = biomes['palette']
+
+        # If there is only one biome, 'data' is not required
+        if 'data' not in biomes:
+            return Biome.from_name(biomes_palette[0].value)
+
+        states = biomes['data']
+
+        index = ((y % 16 // 4) * 4 * 4) + (z // 4) * 4 + (x // 4)
+        bits = (len(biomes_palette) - 1).bit_length()
+        state = index // (64 // bits)
+        data = states[state]
+
+        # makes sure the number is unsigned
+        # by adding 2^64
+        # could also use ctypes.c_ulonglong(n).value but that'd require an extra import
+        if data < 0:
+            data += 2**64
+
+        shifted_data = data >> (index % (64 // bits) * bits)
+        # TODO: fix here if index can span across 2 64bit numbers
+
+        # get `bits` least significant bits
+        # which are the palette index
+        palette_id = shifted_data & 2**bits - 1
+        return Biome.from_name(biomes_palette[palette_id].value)
